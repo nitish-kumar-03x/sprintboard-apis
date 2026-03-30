@@ -8,7 +8,10 @@ const register = async (req, res) => {
     const { name, email, password, role } = req.body;
 
     if (!name || !email || !password || !role) {
-      return res.status(400).json({ message: "All fields are required" });
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
     }
 
     const normalizedEmail = email.toLowerCase();
@@ -17,6 +20,7 @@ const register = async (req, res) => {
 
     if (existingUser) {
       return res.status(400).json({
+        success: false,
         message: "Email already registered",
       });
     }
@@ -30,7 +34,8 @@ const register = async (req, res) => {
       role,
     });
 
-    res.status(201).json({
+    return res.status(201).json({
+      success: true,
       message: "User registered successfully",
       data: {
         id: newUser._id,
@@ -40,7 +45,8 @@ const register = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
+      success: false,
       message: "Server error",
       error: error.message,
     });
@@ -53,7 +59,10 @@ const login = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ message: "All fields are required" });
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
     }
 
     const normalizedEmail = email.toLowerCase();
@@ -62,17 +71,19 @@ const login = async (req, res) => {
 
     if (!foundUser) {
       return res.status(400).json({
+        success: false,
         message: "User Not Found",
       });
     }
 
     const isPasswordMatched = await bcrypt.compare(
       password,
-      foundUser.password,
+      foundUser.password
     );
 
     if (!isPasswordMatched) {
       return res.status(400).json({
+        success: false,
         message: "Email or Password is Incorrect",
       });
     }
@@ -87,7 +98,8 @@ const login = async (req, res) => {
       expiresIn: "1d",
     });
 
-    res.status(200).json({
+    return res.status(200).json({
+      success: true,
       message: "User logged in successfully",
       stoken,
       data: {
@@ -98,11 +110,39 @@ const login = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
+      success: false,
       message: "Server error",
       error: error.message,
     });
   }
 };
 
-module.exports = { register, login };
+// GET USER
+const getUser = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const userDetails = await User.findById(userId).select("-password");
+
+    if (!userDetails) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "User fetched successfully",
+      user: userDetails,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+module.exports = { register, login, getUser };
