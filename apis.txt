@@ -12,50 +12,19 @@ GET /auth/me
 ----------------------------------
 Manager:
 POST /tasks
-GET /tasks
+GET /tasks?status=IN_PROGRESS?priority=HIGH?dueDate=YYYY-MM-DD?assignedTo=userId
 GET /tasks/:id
 PUT /tasks/:id
 DELETE /tasks/:id
 POST /tasks/:id/assign
 PUT /tasks/:id/reassign
-
-Employee:
-GET /tasks/my-tasks
 PUT /tasks/:id/status
+POST /tasks/:id/comments
+GET /tasks/my-tasks?status=IN_PROGRESS?priority=HIGH?dueDate=YYYY-MM-DD?assignedTo=userId
 PUT /tasks/:id/progress
 
-
 ----------------------------------
-4. TASK STATUS APIs
+3. DASHBOARD APIs
 ----------------------------------
-PUT /tasks/:id/status
 
-Example Body:
-{
-  "status": "IN_PROGRESS"
-}
-
-
-----------------------------------
-5. COMMENTS / ACTIVITY APIs
-----------------------------------
-POST /tasks/:id/comments
-
-
-----------------------------------
-7. FILTER & SEARCH APIs
-----------------------------------
-GET /tasks?status=IN_PROGRESS
-GET /tasks?priority=HIGH
-GET /tasks?dueDate=YYYY-MM-DD
-GET /tasks?assignedTo=userId
-
-
-----------------------------------
-8. DASHBOARD APIs
-----------------------------------
-Manager:
-GET /dashboard/manager
-
-Employee:
-GET /dashboard/employee
+GET /dashboard
