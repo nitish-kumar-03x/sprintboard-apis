@@ -1,0 +1,61 @@
+TASK MANAGEMENT SYSTEM - API LIST
+
+----------------------------------
+1. AUTH APIs
+----------------------------------
+POST /auth/signup
+POST /auth/login
+GET /auth/me
+
+----------------------------------
+2. TASK APIs
+----------------------------------
+Manager:
+POST /tasks
+GET /tasks
+GET /tasks/:id
+PUT /tasks/:id
+DELETE /tasks/:id
+POST /tasks/:id/assign
+PUT /tasks/:id/reassign
+
+Employee:
+GET /tasks/my-tasks
+PUT /tasks/:id/status
+PUT /tasks/:id/progress
+
+
+----------------------------------
+4. TASK STATUS APIs
+----------------------------------
+PUT /tasks/:id/status
+
+Example Body:
+{
+  "status": "IN_PROGRESS"
+}
+
+
+----------------------------------
+5. COMMENTS / ACTIVITY APIs
+----------------------------------
+POST /tasks/:id/comments
+
+
+----------------------------------
+7. FILTER & SEARCH APIs
+----------------------------------
+GET /tasks?status=IN_PROGRESS
+GET /tasks?priority=HIGH
+GET /tasks?dueDate=YYYY-MM-DD
+GET /tasks?assignedTo=userId
+
+
+----------------------------------
+8. DASHBOARD APIs
+----------------------------------
+Manager:
+GET /dashboard/manager
+
+Employee:
+GET /dashboard/employee
