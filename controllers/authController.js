@@ -123,7 +123,7 @@ const getUser = async (req, res) => {
   try {
     const email = req.user.email;
 
-    const userDetails = await User.find(email).select("-password");
+    const userDetails = await User.findOne({email}).select("-password");
 
     if (!userDetails) {
       return res.status(404).json({
@@ -140,7 +140,7 @@ const getUser = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: "Server error",
+      message: error,
     });
   }
 };
