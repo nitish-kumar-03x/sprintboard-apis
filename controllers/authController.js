@@ -121,9 +121,9 @@ const login = async (req, res) => {
 // GET USER
 const getUser = async (req, res) => {
   try {
-    const email = req.user.email;
+    const id = req.user.id;
 
-    const userDetails = await User.findOne({email}).select("-password");
+    const userDetails = await User.findById(id).select("-password");
 
     if (!userDetails) {
       return res.status(404).json({
