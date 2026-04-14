@@ -10,7 +10,7 @@ app.use(express.json());
 app.use(morgan("dev"));
 
 const authRouter = require("./routes/auth");
-const tasksRouter = require("./routes/tasks");
+const tasksRouter = require("./routes/task");
 
 const HOST = process.env.HOST || "localhost";
 const PORT = process.env.PORT || 8000;

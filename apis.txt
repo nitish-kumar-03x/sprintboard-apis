@@ -5,7 +5,7 @@ TASK MANAGEMENT SYSTEM - API LIST
 ----------------------------------
 POST /auth/signup
 POST /auth/login
-GET /auth/me
+GET /auth/get-user
 
 ----------------------------------
 2. TASK APIs

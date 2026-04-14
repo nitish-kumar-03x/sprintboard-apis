@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const commentSchema = new mongoose.Schema(
   {
@@ -7,23 +7,17 @@ const commentSchema = new mongoose.Schema(
       ref: "User",
       required: true
     },
-
     message: {
       type: String,
       required: true,
       trim: true
     },
-
-    attachments: [
-      {
-        fileUrl: String,
-        fileName: String
-      }
-    ]
+    isEdited: {
+      type: Boolean,
+      default: false
+    }
   },
-  {
-    timestamps: true
-  }
+  { timestamps: true }
 );
 
 const taskSchema = new mongoose.Schema(
@@ -36,6 +30,7 @@ const taskSchema = new mongoose.Schema(
 
     description: {
       type: String,
+      required: true,
       trim: true
     },
 
@@ -59,12 +54,14 @@ const taskSchema = new mongoose.Schema(
     },
 
     createdBy: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true
     },
 
     assignedTo: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
     },
 
     dueDate: Date,
@@ -73,17 +70,6 @@ const taskSchema = new mongoose.Schema(
 
     tags: [String],
 
-    attachments: [
-      {
-        fileUrl: String,
-        fileName: String,
-        uploadedAt: {
-          type: Date,
-          default: Date.now
-        }
-      }
-    ],
-
     comments: [commentSchema],
 
     isDeleted: {
@@ -91,10 +77,9 @@ const taskSchema = new mongoose.Schema(
       default: false
     }
   },
-  {
-    timestamps: true
-  }
+  { timestamps: true }
 );
 
+const Task = mongoose.model("Task", taskSchema);
 
-export default mongoose.model("Task", taskSchema);
+module.exports = Task;
