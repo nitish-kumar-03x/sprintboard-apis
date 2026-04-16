@@ -2,7 +2,7 @@ const express = require("express");
 const authMiddleware = require("../middlewares/authMiddleware");
 const roleMiddleware = require("../middlewares/roleMiddleware");
 const tasksRouter = express.Router();
-const { createTask } = require("../controllers/taskController");
+const { createTask, getTasks } = require("../controllers/taskController");
 
 tasksRouter.post(
   "/create-task",
@@ -10,5 +10,6 @@ tasksRouter.post(
   roleMiddleware(["manager"]),
   createTask,
 );
+tasksRouter.get("/get-tasks", authMiddleware, getTasks);
 
 module.exports = tasksRouter;
