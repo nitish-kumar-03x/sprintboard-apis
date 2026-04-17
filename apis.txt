@@ -12,7 +12,7 @@ GET /auth/get-user
 ----------------------------------
 Manager:
 POST /tasks
-GET /tasks?status=IN_PROGRESS?priority=HIGH?dueDate=YYYY-MM-DD?assignedTo=userId
+POST /tasks?status=IN_PROGRESS?priority=HIGH?dueDate=YYYY-MM-DD?assignedTo=userId
 GET /tasks/:id
 PUT /tasks/:id
 DELETE /tasks/:id
@@ -20,7 +20,6 @@ POST /tasks/:id/assign
 PUT /tasks/:id/reassign
 PUT /tasks/:id/status
 POST /tasks/:id/comments
-GET /tasks/my-tasks?status=IN_PROGRESS?priority=HIGH?dueDate=YYYY-MM-DD?assignedTo=userId
 PUT /tasks/:id/progress
 
 ----------------------------------

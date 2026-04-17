@@ -72,7 +72,15 @@ const getTasks = async (req, res) => {
       createdBy,
       progressMin,
       progressMax,
-    } = req.query;
+      page = 1,
+      limit = 10,
+    } = req.body;
+
+    // Validate pagination parameters
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.max(1, Math.min(100, parseInt(limit) || 10));
+    const skip = (pageNum - 1) * limitNum;
+
     let filter = { isDeleted: false };
     if (status) filter.status = status;
     if (createdBy) filter.createdBy = createdBy;
@@ -89,12 +97,26 @@ const getTasks = async (req, res) => {
       const date = new Date(dueDate);
       filter.dueDate = { $lte: date };
     }
-    const tasks = await Task.find(filter);
+
+    // Get total count for pagination metadata
+    const totalCount = await Task.countDocuments(filter);
+    const totalPages = Math.ceil(totalCount / limitNum);
+
+    // Fetch paginated tasks
+    const tasks = await Task.find(filter).skip(skip).limit(limitNum);
 
     return res.status(200).json({
       success: true,
       message: "Tasks retrieved successfully",
       data: tasks,
+      pagination: {
+        currentPage: pageNum,
+        pageSize: limitNum,
+        totalItems: totalCount,
+        totalPages: totalPages,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1,
+      },
     });
   } catch (error) {
     return res.status(500).json({

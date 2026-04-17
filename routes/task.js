@@ -10,6 +10,6 @@ tasksRouter.post(
   roleMiddleware(["manager"]),
   createTask,
 );
-tasksRouter.get("/get-tasks", authMiddleware, getTasks);
+tasksRouter.post("/get-tasks", authMiddleware, getTasks);
 
 module.exports = tasksRouter;
