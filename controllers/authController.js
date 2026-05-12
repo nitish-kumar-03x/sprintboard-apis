@@ -1,17 +1,15 @@
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const sendResponse = require("../utils/responseHandler");
+const errorHandler = require("../utils/errorHandler");
 
-// REGISTER
 const register = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
 
     if (!name || !email || !password || !role) {
-      return res.status(400).json({
-        success: false,
-        message: "All fields are required",
-      });
+      return sendResponse(res, 400, false, "All fields are required");
     }
 
     const normalizedEmail = email.toLowerCase();
@@ -19,10 +17,7 @@ const register = async (req, res) => {
     const existingUser = await User.findOne({ email: normalizedEmail });
 
     if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: "Email already registered",
-      });
+      return sendResponse(res, 400, false, "Email already registered");
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -34,35 +29,23 @@ const register = async (req, res) => {
       role,
     });
 
-    return res.status(201).json({
-      success: true,
-      message: "User registered successfully",
-      data: {
-        id: newUser._id,
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role,
-      },
+    return sendResponse(res, 201, true, "User registered successfully", {
+      id: newUser._id,
+      name: newUser.name,
+      email: newUser.email,
+      role: newUser.role,
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Server error",
-      error: error.message,
-    });
+    return errorHandler(error, res);
   }
 };
 
-// LOGIN
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "All fields are required",
-      });
+      return sendResponse(res, 400, false, "All fields are required");
     }
 
     const normalizedEmail = email.toLowerCase();
@@ -70,22 +53,16 @@ const login = async (req, res) => {
     const foundUser = await User.findOne({ email: normalizedEmail });
 
     if (!foundUser) {
-      return res.status(400).json({
-        success: false,
-        message: "User Not Found",
-      });
+      return sendResponse(res, 400, false, "User Not Found");
     }
 
     const isPasswordMatched = await bcrypt.compare(
       password,
-      foundUser.password
+      foundUser.password,
     );
 
     if (!isPasswordMatched) {
-      return res.status(400).json({
-        success: false,
-        message: "Email or Password is Incorrect",
-      });
+      return sendResponse(res, 400, false, "Email or Password is Incorrect");
     }
 
     const payload = {
@@ -98,51 +75,16 @@ const login = async (req, res) => {
       expiresIn: "1d",
     });
 
-    return res.status(200).json({
-      success: true,
-      message: "User logged in successfully",
+    return sendResponse(res, 200, true, "User logged in successfully", {
       stoken,
-      data: {
-        id: foundUser._id,
-        name: foundUser.name,
-        email: foundUser.email,
-        role: foundUser.role,
-      },
+      id: foundUser._id,
+      name: foundUser.name,
+      email: foundUser.email,
+      role: foundUser.role,
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Server error",
-      error: error.message,
-    });
+    return errorHandler(error, res);
   }
 };
 
-// GET USER
-const getUser = async (req, res) => {
-  try {
-    const id = req.user.id;
-
-    const userDetails = await User.findById(id).select("-password");
-
-    if (!userDetails) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: "User fetched successfully",
-      user: userDetails,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error,
-    });
-  }
-};
-
-module.exports = { register, login, getUser };
+module.exports = { register, login };

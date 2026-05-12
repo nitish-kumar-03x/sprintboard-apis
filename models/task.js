@@ -5,19 +5,19 @@ const commentSchema = new mongoose.Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true
+      required: true,
     },
     message: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
     isEdited: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const taskSchema = new mongoose.Schema(
@@ -25,43 +25,43 @@ const taskSchema = new mongoose.Schema(
     title: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
 
     description: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
 
     status: {
       type: String,
       enum: ["TODO", "IN_PROGRESS", "COMPLETED", "BLOCKED", "CANCELLED"],
-      default: "TODO"
+      default: "TODO",
     },
 
     priority: {
       type: String,
       enum: ["LOW", "MEDIUM", "HIGH", "URGENT"],
-      default: "MEDIUM"
+      default: "MEDIUM",
     },
 
     progress: {
       type: Number,
       default: 0,
       min: 0,
-      max: 100
+      max: 100,
     },
 
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true
+      required: true,
     },
 
     assignedTo: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User"
+      ref: "User",
     },
 
     dueDate: Date,
@@ -74,10 +74,10 @@ const taskSchema = new mongoose.Schema(
 
     isDeleted: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const Task = mongoose.model("Task", taskSchema);
