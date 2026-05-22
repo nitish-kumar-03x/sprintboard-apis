@@ -20,6 +20,10 @@ const userSchema = new mongoose.Schema(
       require: true,
       enum: ["manager", "employee"],
     },
+    image: {
+      type: String,
+      default: null,
+    },
   },
   { timestamps: true },
 );

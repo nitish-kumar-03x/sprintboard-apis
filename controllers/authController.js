@@ -1,14 +1,25 @@
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const fs = require("fs");
 const sendResponse = require("../utils/responseHandler");
 const errorHandler = require("../utils/errorHandler");
+
+
+const cleanupUploadedFile = (req) => {
+  if (req.file && req.file.path) {
+    fs.unlink(req.file.path, (err) => {
+      if (err) console.error("Failed to delete uploaded file:", err.message);
+    });
+  }
+};
 
 const register = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
 
     if (!name || !email || !password || !role) {
+      cleanupUploadedFile(req);
       return sendResponse(res, 400, false, "All fields are required");
     }
 
@@ -17,16 +28,20 @@ const register = async (req, res) => {
     const existingUser = await User.findOne({ email: normalizedEmail });
 
     if (existingUser) {
+      cleanupUploadedFile(req);
       return sendResponse(res, 400, false, "Email already registered");
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
 
     const newUser = await User.create({
       name,
       email: normalizedEmail,
       password: hashedPassword,
       role,
+      image: imagePath,
     });
 
     return sendResponse(res, 201, true, "User registered successfully", {
@@ -34,8 +49,10 @@ const register = async (req, res) => {
       name: newUser.name,
       email: newUser.email,
       role: newUser.role,
+      image: newUser.image,
     });
   } catch (error) {
+    cleanupUploadedFile(req);
     return errorHandler(error, res);
   }
 };

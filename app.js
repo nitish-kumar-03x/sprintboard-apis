@@ -10,6 +10,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
+app.use("/uploads", express.static("uploads"));
 
 const authRouter = require("./routes/auth");
 const userRouter = require("./routes/user");
