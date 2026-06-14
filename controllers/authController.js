@@ -4,12 +4,14 @@ const jwt = require("jsonwebtoken");
 const fs = require("fs");
 const sendResponse = require("../utils/responseHandler");
 const errorHandler = require("../utils/errorHandler");
+const { sendLoginNotification } = require("../utils/mailer");
+const { uploadToCloudinary, cloudinary } = require("../utils/cloudinary");
 
 
 const cleanupUploadedFile = (req) => {
-  if (req.file && req.file.path) {
-    fs.unlink(req.file.path, (err) => {
-      if (err) console.error("Failed to delete uploaded file:", err.message);
+  if (req.file && req.file.public_id) {
+    cloudinary.uploader.destroy(req.file.public_id, (err) => {
+      if (err) console.error("Failed to delete from cloudinary:", err.message);
     });
   }
 };
@@ -34,7 +36,11 @@ const register = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+    let imagePath = null;
+    if (req.file) {
+      const uploadResult = await uploadToCloudinary(req.file.buffer, { folder: "avatars" });
+      imagePath = uploadResult.secure_url;
+    }
 
     const newUser = await User.create({
       name,
@@ -88,16 +94,19 @@ const login = async (req, res) => {
       role: foundUser.role,
     };
 
-    const stoken = jwt.sign(payload, process.env.JWT_SECRET, {
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: "1d",
     });
 
+    sendLoginNotification(foundUser.email, foundUser.name);
+
     return sendResponse(res, 200, true, "User logged in successfully", {
-      stoken,
+      token,
       id: foundUser._id,
       name: foundUser.name,
       email: foundUser.email,
       role: foundUser.role,
+      avatar: foundUser.image,
     });
   } catch (error) {
     return errorHandler(error, res);
