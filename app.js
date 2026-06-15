@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const morgan = require("morgan");
 const cors = require("cors");
+const swaggerUi = require("swagger-ui-express");
 
 dotenv.config();
 
@@ -11,6 +12,9 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
 app.use("/uploads", express.static("uploads"));
+
+const swaggerSpec = require("./config/swagger");
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 const authRouter = require("./routes/auth");
 const userRouter = require("./routes/user");
