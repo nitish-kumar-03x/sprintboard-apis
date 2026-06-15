@@ -2,20 +2,15 @@ const jwt = require("jsonwebtoken");
 
 const authMiddleware = (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
-    let token;
+    const stoken = req.headers.stoken;
 
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-      token = authHeader.split(" ")[1];
-    }
-
-    if (!token) {
+    if (!stoken) {
       return res.status(401).json({
         message: "No token provided",
       });
     }
 
-    const details = jwt.verify(token, process.env.JWT_SECRET);
+    const details = jwt.verify(stoken, process.env.JWT_SECRET);
 
     req.user = details;
 
