@@ -80,7 +80,7 @@ const getDashboard = async (req, res) => {
       recentTasks,
     });
   } catch (error) {
-    errorHandler(error, res);
+    return errorHandler(error, res);
   }
 };
 

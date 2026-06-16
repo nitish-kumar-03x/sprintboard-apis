@@ -14,7 +14,7 @@ const getUser = async (req, res) => {
 
     return sendResponse(res, 200, true, "User fetched successfully", userDetails);
   } catch (error) {
-    errorHandler(error, res);
+    return errorHandler(error, res);
   }
 };
 
@@ -24,7 +24,7 @@ const getAllUsers = async (req, res) => {
 
     return sendResponse(res, 200, true, "Users fetched successfully", users);
   } catch (error) {
-    errorHandler(error, res);
+    return errorHandler(error, res);
   }
 };
 

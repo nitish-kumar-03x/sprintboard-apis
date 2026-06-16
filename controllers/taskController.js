@@ -44,7 +44,7 @@ const createTask = async (req, res) => {
 
     return sendResponse(res, 201, true, "Task created successfully", newTask);
   } catch (error) {
-    errorHandler(error, res);
+    return errorHandler(error, res);
   }
 };
 
@@ -104,7 +104,7 @@ const getTasks = async (req, res) => {
       },
     });
   } catch (error) {
-    errorHandler(error, res);
+    return errorHandler(error, res);
   }
 };
 
@@ -116,12 +116,7 @@ const getTaskById = async (req, res) => {
       return sendResponse(res, 400, false, "Task ID is Required.");
     }
 
-    const deleted = await Task.findById(id);
-    if(deleted.isDeleted == true){
-      return sendResponse(res, 400, false, "Task didn't exists.");
-    }
-
-    const task = await Task.findById(id)
+    const task = await Task.findOne({ _id: id, isDeleted: false })
       .populate("createdBy", "name email")
       .populate("assignedTo", "name email")
       .populate("comments.user", "name email");
@@ -132,7 +127,7 @@ const getTaskById = async (req, res) => {
 
     return sendResponse(res, 200, true, "Task retrieved successfully", task);
   } catch (error) {
-    errorHandler(error, res);
+    return errorHandler(error, res);
   }
 };
 
@@ -145,7 +140,7 @@ const updateTask = async (req, res) => {
       return sendResponse(res, 400, false, "Task ID is Required.");
     }
 
-    const task = await Task.findById(id);
+    const task = await Task.findOne({ _id: id, isDeleted: false });
 
     if (!task) {
       return sendResponse(res, 404, false, "Task not found");
@@ -166,7 +161,7 @@ const updateTask = async (req, res) => {
 
     return sendResponse(res, 200, true, "Task updated successfully", updatedTask);
   } catch (error) {
-    errorHandler(error, res);
+    return errorHandler(error, res);
   }
 };
 
@@ -178,7 +173,7 @@ const deleteTask = async (req, res) => {
       return sendResponse(res, 400, false, "Task ID is Required.");
     }
 
-    const task = await Task.findById(id);
+    const task = await Task.findOne({ _id: id, isDeleted: false });
 
     if (!task) {
       return sendResponse(res, 404, false, "Task not found");
@@ -192,7 +187,7 @@ const deleteTask = async (req, res) => {
 
     return sendResponse(res, 200, true, "Task deleted successfully");
   } catch (error) {
-    errorHandler(error, res);
+    return errorHandler(error, res);
   }
 };
 
@@ -211,7 +206,7 @@ const assignTask = async (req, res) => {
       return sendResponse(res, 400, false, "Invalid MongoDB ObjectId format");
     }
 
-    const task = await Task.findById(id);
+    const task = await Task.findOne({ _id: id, isDeleted: false });
 
     if (!task) {
       return sendResponse(res, 404, false, "Task not found");
@@ -233,7 +228,7 @@ const assignTask = async (req, res) => {
 
     return sendResponse(res, 200, true, "Task assigned successfully", updatedTask);
   } catch (error) {
-    errorHandler(error, res);
+    return errorHandler(error, res);
   }
 };
 
@@ -245,7 +240,7 @@ const reassignTask = async (req, res) => {
       return sendResponse(res, 400, false, "Task ID and assignedTo are required");
     }
 
-    const task = await Task.findById(id);
+    const task = await Task.findOne({ _id: id, isDeleted: false });
 
     if (!task) {
       return sendResponse(res, 404, false, "Task not found");
@@ -267,7 +262,7 @@ const reassignTask = async (req, res) => {
 
     return sendResponse(res, 200, true, "Task reassigned successfully", updatedTask);
   } catch (error) {
-    errorHandler(error, res);
+    return errorHandler(error, res);
   }
 };
 
@@ -291,7 +286,7 @@ const updateTaskStatus = async (req, res) => {
       return sendResponse(res, 400, false, `Status must be one of: ${validStatuses.join(", ")}`);
     }
 
-    const task = await Task.findById(id);
+    const task = await Task.findOne({ _id: id, isDeleted: false });
 
     if (!task) {
       return sendResponse(res, 404, false, "Task not found");
@@ -311,7 +306,7 @@ const updateTaskStatus = async (req, res) => {
 
     return sendResponse(res, 200, true, "Task status updated successfully", updatedTask);
   } catch (error) {
-    errorHandler(error, res);
+    return errorHandler(error, res);
   }
 };
 
@@ -324,7 +319,7 @@ const addComment = async (req, res) => {
       return sendResponse(res, 400, false, "Task ID and message are required");
     }
 
-    const task = await Task.findById(id);
+    const task = await Task.findOne({ _id: id, isDeleted: false });
 
     if (!task) {
       return sendResponse(res, 404, false, "Task not found");
@@ -346,7 +341,7 @@ const addComment = async (req, res) => {
 
     return sendResponse(res, 201, true, "Comment added successfully", updatedTask);
   } catch (error) {
-    errorHandler(error, res);
+    return errorHandler(error, res);
   }
 };
 
@@ -363,7 +358,7 @@ const updateProgress = async (req, res) => {
       return sendResponse(res, 400, false, "Progress must be between 0 and 100");
     }
 
-    const task = await Task.findById(id);
+    const task = await Task.findOne({ _id: id, isDeleted: false });
 
     if (!task) {
       return sendResponse(res, 404, false, "Task not found");
@@ -380,7 +375,7 @@ const updateProgress = async (req, res) => {
 
     return sendResponse(res, 200, true, "Task progress updated successfully", updatedTask);
   } catch (error) {
-    errorHandler(error, res);
+    return errorHandler(error, res);
   }
 };
 
