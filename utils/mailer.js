@@ -1,7 +1,4 @@
 const nodemailer = require('nodemailer');
-const dns = require('dns');
-
-dns.setDefaultResultOrder('ipv4first');
 
 const sendLoginNotification = async (email, name) => {
   try {
@@ -10,6 +7,7 @@ const sendLoginNotification = async (email, name) => {
       port: 587,
       secure: false, // true for 465, false for other ports
       requireTLS: true,
+      family: 4, // force IPv4
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
