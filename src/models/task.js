@@ -17,7 +17,7 @@ const commentSchema = new mongoose.Schema(
       default: false,
     },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 const taskSchema = new mongoose.Schema(
@@ -77,7 +77,7 @@ const taskSchema = new mongoose.Schema(
       default: false,
     },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 const Task = mongoose.model("Task", taskSchema);

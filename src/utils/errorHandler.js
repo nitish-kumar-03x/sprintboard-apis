@@ -1,4 +1,3 @@
-
 const errorHandler = (error, res) => {
   const statusCode = error.statusCode || 500;
   const message = error.message || "Internal Server Error";
@@ -7,7 +6,7 @@ const errorHandler = (error, res) => {
     success: false,
     message,
     statusCode,
-    data:error.stack
+    data: error.stack,
   });
 };
 

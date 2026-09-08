@@ -1,7 +1,7 @@
 const express = require("express");
 const userRouter = express.Router();
-const authMiddleware = require('../middlewares/authMiddleware');
-const {getUser, getAllUsers} = require("../controllers/userController");
+const authMiddleware = require("../middlewares/authMiddleware");
+const { getUser, getAllUsers } = require("../controllers/userController");
 
 /**
  * @swagger
@@ -34,5 +34,5 @@ userRouter.get("/me", authMiddleware, getUser);
  *         description: Unauthorized
  */
 userRouter.get("/all-users", authMiddleware, getAllUsers);
- 
+
 module.exports = userRouter;

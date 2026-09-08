@@ -1,12 +1,12 @@
 {
   "dependencies": {
+    "@prisma/client": "^7.10.0",
     "bcrypt": "^6.0.0",
     "cloudinary": "^2.10.0",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.3.1",
     "morgan": "^1.10.1",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^8.0.11",
@@ -18,9 +18,11 @@
   "name": "sprintboard-apis",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
+  "main": "src/server.js",
   "scripts": {
-    "start": "nodemon app.js",
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "format": "prettier --write \"src/**/*.{js,json}\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -33,5 +35,8 @@
   "bugs": {
     "url": "https://github.com/nitish-kumar-03x/sprintboard-apis/issues"
   },
-  "homepage": "https://github.com/nitish-kumar-03x/sprintboard-apis#readme"
+  "homepage": "https://github.com/nitish-kumar-03x/sprintboard-apis#readme",
+  "devDependencies": {
+    "prettier": "^3.9.6"
+  }
 }

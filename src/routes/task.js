@@ -91,7 +91,7 @@ tasksRouter.put(
   "/update/:id",
   authMiddleware,
   roleMiddleware(["manager"]),
-  updateTask,
+  updateTask
 );
 
 /**
@@ -116,7 +116,7 @@ tasksRouter.delete(
   "/:id",
   authMiddleware,
   roleMiddleware(["manager"]),
-  deleteTask,
+  deleteTask
 );
 
 /**
@@ -135,7 +135,7 @@ tasksRouter.post(
   "/assign",
   authMiddleware,
   roleMiddleware(["manager"]),
-  assignTask,
+  assignTask
 );
 
 /**
@@ -154,7 +154,7 @@ tasksRouter.put(
   "/reassign",
   authMiddleware,
   roleMiddleware(["manager"]),
-  reassignTask,
+  reassignTask
 );
 
 /**
@@ -201,7 +201,7 @@ tasksRouter.put(
   "/progress",
   authMiddleware,
   roleMiddleware(["employee"]),
-  updateProgress,
+  updateProgress
 );
 
 module.exports = tasksRouter;
