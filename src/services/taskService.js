@@ -1,6 +1,74 @@
-const Task = require("../models/task");
-const User = require("../models/user");
+const pool = require("../config/database");
 const CustomError = require("../utils/CustomError");
+
+const mapTaskResult = (row) => {
+  if (!row) return null;
+  const task = {
+    _id: row.id,
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    status: row.status,
+    priority: row.priority,
+    progress: row.progress,
+    dueDate: row.dueDate,
+    startDate: row.startDate,
+    completedAt: row.completedAt,
+    tags: typeof row.tags === 'string' ? JSON.parse(row.tags) : row.tags,
+    isDeleted: row.isDeleted,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    createdBy: row.creatorId ? {
+      _id: row.creatorId,
+      name: row.creatorName,
+      email: row.creatorEmail
+    } : null,
+    assignedTo: row.assigneeId ? {
+      _id: row.assigneeId,
+      name: row.assigneeName,
+      email: row.assigneeEmail
+    } : null
+  };
+  return task;
+};
+
+const getTaskByIdHelper = async (id) => {
+  const [tasks] = await pool.query(`
+    SELECT t.*, 
+      c.id as creatorId, c.name as creatorName, c.email as creatorEmail, 
+      a.id as assigneeId, a.name as assigneeName, a.email as assigneeEmail 
+    FROM Tasks t 
+    LEFT JOIN Users c ON t.createdBy = c.id 
+    LEFT JOIN Users a ON t.assignedTo = a.id 
+    WHERE t.id = ? AND t.isDeleted = FALSE
+  `, [id]);
+  
+  if (tasks.length === 0) return null;
+  
+  const task = mapTaskResult(tasks[0]);
+  
+  const [comments] = await pool.query(`
+    SELECT tc.*, u.id as userId, u.name as userName, u.email as userEmail
+    FROM TaskComments tc
+    JOIN Users u ON tc.userId = u.id
+    WHERE tc.taskId = ?
+    ORDER BY tc.createdAt ASC
+  `, [id]);
+  
+  task.comments = comments.map(c => ({
+    _id: c.id,
+    message: c.message,
+    isEdited: c.isEdited,
+    createdAt: c.createdAt,
+    user: {
+      _id: c.userId,
+      name: c.userName,
+      email: c.userEmail
+    }
+  }));
+  
+  return task;
+};
 
 const createTask = async (data, userId) => {
   const {
@@ -27,20 +95,17 @@ const createTask = async (data, userId) => {
     throw new CustomError("Progress must be between 0 and 100", 400);
   }
 
-  const newTask = await Task.create({
-    title,
-    description,
-    status,
-    priority,
-    progress,
-    createdBy: userId,
-    assignedTo,
-    dueDate,
-    startDate,
-    tags,
-  });
+  const tagsJson = tags ? JSON.stringify(tags) : JSON.stringify([]);
 
-  return newTask;
+  const [result] = await pool.query(`
+    INSERT INTO Tasks (title, description, status, priority, progress, createdBy, assignedTo, dueDate, startDate, tags)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `, [
+    title, description, status || 'TODO', priority || 'MEDIUM', progress || 0,
+    userId, assignedTo, new Date(dueDate), new Date(startDate), tagsJson
+  ]);
+
+  return getTaskByIdHelper(result.insertId);
 };
 
 const getTasks = async (queryData) => {
@@ -60,29 +125,36 @@ const getTasks = async (queryData) => {
   const limitNum = Math.max(1, Math.min(100, parseInt(limit) || 10));
   const skip = (pageNum - 1) * limitNum;
 
-  let filter = { isDeleted: false };
-  if (status) filter.status = status;
-  if (createdBy) filter.createdBy = createdBy;
-  if (priority) filter.priority = priority;
-  if (assignedTo) filter.assignedTo = assignedTo;
-  if (progressMin !== undefined || progressMax !== undefined) {
-    filter.progress = {};
-    if (progressMin !== undefined) filter.progress.$gte = parseInt(progressMin);
-    if (progressMax !== undefined) filter.progress.$lte = parseInt(progressMax);
-  }
-  if (dueDate) {
-    const date = new Date(dueDate);
-    filter.dueDate = { $lte: date };
-  }
+  let whereClause = "WHERE t.isDeleted = FALSE";
+  const params = [];
 
-  const totalCount = await Task.countDocuments(filter);
+  if (status) { whereClause += " AND t.status = ?"; params.push(status); }
+  if (createdBy) { whereClause += " AND t.createdBy = ?"; params.push(createdBy); }
+  if (priority) { whereClause += " AND t.priority = ?"; params.push(priority); }
+  if (assignedTo) { whereClause += " AND t.assignedTo = ?"; params.push(assignedTo); }
+  if (progressMin !== undefined) { whereClause += " AND t.progress >= ?"; params.push(parseInt(progressMin)); }
+  if (progressMax !== undefined) { whereClause += " AND t.progress <= ?"; params.push(parseInt(progressMax)); }
+  if (dueDate) { whereClause += " AND t.dueDate <= ?"; params.push(new Date(dueDate)); }
+
+  const countQuery = `SELECT COUNT(*) as total FROM Tasks t ${whereClause}`;
+  const [countResult] = await pool.query(countQuery, params);
+  const totalCount = countResult[0].total;
   const totalPages = Math.ceil(totalCount / limitNum);
 
-  const tasks = await Task.find(filter)
-    .populate("createdBy", "name email")
-    .populate("assignedTo", "name email")
-    .skip(skip)
-    .limit(limitNum);
+  const dataQuery = `
+    SELECT t.*, 
+      c.id as creatorId, c.name as creatorName, c.email as creatorEmail, 
+      a.id as assigneeId, a.name as assigneeName, a.email as assigneeEmail 
+    FROM Tasks t 
+    LEFT JOIN Users c ON t.createdBy = c.id 
+    LEFT JOIN Users a ON t.assignedTo = a.id 
+    ${whereClause}
+    ORDER BY t.createdAt DESC
+    LIMIT ? OFFSET ?
+  `;
+  const [tasksRaw] = await pool.query(dataQuery, [...params, limitNum, skip]);
+
+  const tasks = tasksRaw.map(mapTaskResult);
 
   return {
     tasks,
@@ -102,10 +174,7 @@ const getTaskById = async (id) => {
     throw new CustomError("Task ID is Required.", 400);
   }
 
-  const task = await Task.findOne({ _id: id, isDeleted: false })
-    .populate("createdBy", "name email")
-    .populate("assignedTo", "name email")
-    .populate("comments.user", "name email");
+  const task = await getTaskByIdHelper(id);
 
   if (!task) {
     throw new CustomError("Task not found", 404);
@@ -121,7 +190,7 @@ const updateTask = async (id, data) => {
     throw new CustomError("Task ID is Required.", 400);
   }
 
-  const task = await Task.findOne({ _id: id, isDeleted: false });
+  const task = await getTaskByIdHelper(id);
 
   if (!task) {
     throw new CustomError("Task not found", 404);
@@ -131,16 +200,21 @@ const updateTask = async (id, data) => {
     throw new CustomError("Start date cannot be after due date", 400);
   }
 
-  const updatedTask = await Task.findByIdAndUpdate(
-    id,
-    { title, description, dueDate, startDate, tags },
-    { new: true, runValidators: true }
-  )
-    .populate("createdBy", "name email")
-    .populate("assignedTo", "name email")
-    .populate("comments.user", "name email");
+  const updates = [];
+  const params = [];
 
-  return updatedTask;
+  if (title !== undefined) { updates.push("title = ?"); params.push(title); }
+  if (description !== undefined) { updates.push("description = ?"); params.push(description); }
+  if (dueDate !== undefined) { updates.push("dueDate = ?"); params.push(new Date(dueDate)); }
+  if (startDate !== undefined) { updates.push("startDate = ?"); params.push(new Date(startDate)); }
+  if (tags !== undefined) { updates.push("tags = ?"); params.push(JSON.stringify(tags)); }
+
+  if (updates.length > 0) {
+    params.push(id);
+    await pool.query(`UPDATE Tasks SET ${updates.join(", ")} WHERE id = ?`, params);
+  }
+
+  return getTaskByIdHelper(id);
 };
 
 const deleteTask = async (id) => {
@@ -148,13 +222,13 @@ const deleteTask = async (id) => {
     throw new CustomError("Task ID is Required.", 400);
   }
 
-  const task = await Task.findOne({ _id: id, isDeleted: false });
+  const task = await getTaskByIdHelper(id);
 
   if (!task) {
     throw new CustomError("Task not found", 404);
   }
 
-  await Task.findByIdAndUpdate(id, { isDeleted: true }, { new: true });
+  await pool.query("UPDATE Tasks SET isDeleted = TRUE WHERE id = ?", [id]);
 };
 
 const assignTask = async (id, assignedTo) => {
@@ -162,62 +236,24 @@ const assignTask = async (id, assignedTo) => {
     throw new CustomError("Task ID and assignedTo are required", 400);
   }
 
-  if (
-    !id.match(/^[0-9a-fA-F]{24}$/) ||
-    !assignedTo.match(/^[0-9a-fA-F]{24}$/)
-  ) {
-    throw new CustomError("Invalid MongoDB ObjectId format", 400);
-  }
-
-  const task = await Task.findOne({ _id: id, isDeleted: false });
+  const task = await getTaskByIdHelper(id);
 
   if (!task) {
     throw new CustomError("Task not found", 404);
   }
 
-  const userExists = await User.findById(assignedTo);
-  if (!userExists) {
+  const [users] = await pool.query("SELECT id FROM Users WHERE id = ?", [assignedTo]);
+  if (users.length === 0) {
     throw new CustomError("User with provided ID does not exist", 404);
   }
 
-  const updatedTask = await Task.findByIdAndUpdate(
-    id,
-    { assignedTo },
-    { new: true }
-  )
-    .populate("createdBy", "name email")
-    .populate("assignedTo", "name email")
-    .populate("comments.user", "name email");
+  await pool.query("UPDATE Tasks SET assignedTo = ? WHERE id = ?", [assignedTo, id]);
 
-  return updatedTask;
+  return getTaskByIdHelper(id);
 };
 
 const reassignTask = async (id, assignedTo) => {
-  if (!id || !assignedTo) {
-    throw new CustomError("Task ID and assignedTo are required", 400);
-  }
-
-  const task = await Task.findOne({ _id: id, isDeleted: false });
-
-  if (!task) {
-    throw new CustomError("Task not found", 404);
-  }
-
-  const userExists = await User.findById(assignedTo);
-  if (!userExists) {
-    throw new CustomError("User with provided ID does not exist", 404);
-  }
-
-  const updatedTask = await Task.findByIdAndUpdate(
-    id,
-    { assignedTo: assignedTo },
-    { new: true }
-  )
-    .populate("createdBy", "name email")
-    .populate("assignedTo", "name email")
-    .populate("comments.user", "name email");
-
-  return updatedTask;
+  return assignTask(id, assignedTo);
 };
 
 const updateTaskStatus = async (id, status) => {
@@ -239,25 +275,21 @@ const updateTaskStatus = async (id, status) => {
     );
   }
 
-  const task = await Task.findOne({ _id: id, isDeleted: false });
+  const task = await getTaskByIdHelper(id);
 
   if (!task) {
     throw new CustomError("Task not found", 404);
   }
 
-  const updateData = { status };
+  const completedAt = status === "COMPLETED" ? new Date() : null;
+  
   if (status === "COMPLETED") {
-    updateData.completedAt = new Date();
+    await pool.query("UPDATE Tasks SET status = ?, completedAt = ? WHERE id = ?", [status, completedAt, id]);
+  } else {
+    await pool.query("UPDATE Tasks SET status = ? WHERE id = ?", [status, id]);
   }
 
-  const updatedTask = await Task.findByIdAndUpdate(id, updateData, {
-    new: true,
-  })
-    .populate("createdBy", "name email")
-    .populate("assignedTo", "name email")
-    .populate("comments.user", "name email");
-
-  return updatedTask;
+  return getTaskByIdHelper(id);
 };
 
 const addComment = async (id, message, userId) => {
@@ -265,27 +297,15 @@ const addComment = async (id, message, userId) => {
     throw new CustomError("Task ID and message are required", 400);
   }
 
-  const task = await Task.findOne({ _id: id, isDeleted: false });
+  const task = await getTaskByIdHelper(id);
 
   if (!task) {
     throw new CustomError("Task not found", 404);
   }
 
-  const newComment = {
-    user: userId,
-    message,
-    isEdited: false,
-  };
+  await pool.query("INSERT INTO TaskComments (taskId, userId, message) VALUES (?, ?, ?)", [id, userId, message]);
 
-  task.comments.push(newComment);
-  await task.save();
-
-  const updatedTask = await Task.findById(id)
-    .populate("createdBy", "name email")
-    .populate("assignedTo", "name email")
-    .populate("comments.user", "name email");
-
-  return updatedTask;
+  return getTaskByIdHelper(id);
 };
 
 const updateProgress = async (id, progress) => {
@@ -297,22 +317,15 @@ const updateProgress = async (id, progress) => {
     throw new CustomError("Progress must be between 0 and 100", 400);
   }
 
-  const task = await Task.findOne({ _id: id, isDeleted: false });
+  const task = await getTaskByIdHelper(id);
 
   if (!task) {
     throw new CustomError("Task not found", 404);
   }
 
-  const updatedTask = await Task.findByIdAndUpdate(
-    id,
-    { progress },
-    { new: true }
-  )
-    .populate("createdBy", "name email")
-    .populate("assignedTo", "name email")
-    .populate("comments.user", "name email"); // Wait, assignedTo isn't a function, fixing typo...
+  await pool.query("UPDATE Tasks SET progress = ? WHERE id = ?", [progress, id]);
 
-  return updatedTask;
+  return getTaskByIdHelper(id);
 };
 
 module.exports = {

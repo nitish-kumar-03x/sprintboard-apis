@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
 
-const swaggerSpec = require("./utils/swagger");
+const swaggerSpec = require("./config/swagger");
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 const authRouter = require("./routes/auth");

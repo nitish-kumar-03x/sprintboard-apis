@@ -1,8 +1,8 @@
-const User = require("../models/user");
+const pool = require("../config/database");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { sendLoginNotification } = require("../utils/mailer");
-const { uploadToCloudinary, cloudinary } = require("../utils/cloudinary");
+const { uploadToCloudinary, cloudinary } = require("../config/cloudinary");
 const CustomError = require("../utils/CustomError");
 
 const cleanupUploadedFile = (file) => {
@@ -23,9 +23,12 @@ const registerUser = async (data, file) => {
 
   const normalizedEmail = email.toLowerCase();
 
-  const existingUser = await User.findOne({ email: normalizedEmail });
-
-  if (existingUser) {
+  const [existingUserRows] = await pool.query(
+    "SELECT * FROM Users WHERE email = ?",
+    [normalizedEmail]
+  );
+  
+  if (existingUserRows.length > 0) {
     cleanupUploadedFile(file);
     throw new CustomError("Email already registered", 400);
   }
@@ -40,20 +43,17 @@ const registerUser = async (data, file) => {
     imagePath = uploadResult.secure_url;
   }
 
-  const newUser = await User.create({
-    name,
-    email: normalizedEmail,
-    password: hashedPassword,
-    role,
-    image: imagePath,
-  });
+  const [insertResult] = await pool.query(
+    "INSERT INTO Users (name, email, password, role, image) VALUES (?, ?, ?, ?, ?)",
+    [name, normalizedEmail, hashedPassword, role, imagePath]
+  );
 
   return {
-    id: newUser._id,
-    name: newUser.name,
-    email: newUser.email,
-    role: newUser.role,
-    image: newUser.image,
+    id: insertResult.insertId,
+    name,
+    email: normalizedEmail,
+    role,
+    image: imagePath,
   };
 };
 
@@ -66,7 +66,10 @@ const loginUser = async (data) => {
 
   const normalizedEmail = email.toLowerCase();
 
-  const foundUser = await User.findOne({ email: normalizedEmail });
+  const [rows] = await pool.query("SELECT * FROM Users WHERE email = ?", [
+    normalizedEmail,
+  ]);
+  const foundUser = rows[0];
 
   if (!foundUser) {
     throw new CustomError("User Not Found", 400);
@@ -79,7 +82,7 @@ const loginUser = async (data) => {
   }
 
   const payload = {
-    id: foundUser._id,
+    id: foundUser.id,
     email: foundUser.email,
     role: foundUser.role,
   };
@@ -95,7 +98,7 @@ const loginUser = async (data) => {
 
   return {
     token,
-    id: foundUser._id,
+    id: foundUser.id,
     name: foundUser.name,
     email: foundUser.email,
     role: foundUser.role,
