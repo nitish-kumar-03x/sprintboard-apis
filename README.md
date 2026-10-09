@@ -42,22 +42,6 @@ A robust, feature-rich backend API for a project and task management tool (Sprin
 
 3. **Set up Environment Variables**
    Rename `.env.example` to `.env` and fill in your credentials:
-   \`\`\`env
-   HOST =localhost
-   PORT =8000
-   DATABASE_URL ="YOUR URL"
-   JWT_SECRET =SECRET KEY
-
-   CLOUDINARY_CLOUD_NAME=SAMPLE
-   CLOUDINARY_API_KEY=123456789
-   CLOUDINARY_API_SECRET=SECRET
-
-   EMAIL_USER =EMAIL
-   EMAIL_PASS =APP PASSWORD
-   EMAIL_SERVICE =gmail
-
-   REDIS_URL = "YOUR URL"
-   \`\`\`
 
 4. **Initialize Database**
    Import the `schema.sql` file into your MySQL database to create the required tables.
