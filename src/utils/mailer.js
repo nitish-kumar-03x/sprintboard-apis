@@ -1,32 +1,87 @@
 const nodemailer = require("nodemailer");
+const { Queue, Worker } = require("bullmq");
 
-const sendLoginNotification = async (email, name) => {
-  try {
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      requireTLS: true,
-      family: 4, // force IPv4 to prevent local ENETUNREACH errors
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+const IORedis = require("ioredis");
+const redisConnection = new IORedis(process.env.REDIS_URL || "redis://127.0.0.1:6379", { maxRetriesPerRequest: null });
 
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Security Alert: New Login to Your Account",
-      text: `Hello ${name},\n\nWe detected a new login to your account. If this was you, you can safely ignore this email.\n\nIf you did not log in, please contact support immediately.\n\nBest,\nThe Sprintboard Team`,
-      html: `<p>Hello ${name},</p><p>We detected a new login to your account. If this was you, you can safely ignore this email.</p><p>If you did not log in, please contact support immediately.</p><p>Best,<br>The Sprintboard Team</p>`,
-    };
+const emailQueue = new Queue("email-queue", {
+  connection: redisConnection,
+});
 
-    await transporter.sendMail(mailOptions);
-    console.log(`Login notification email sent to ${email}`);
-  } catch (error) {
-    console.error("Error sending email:", error.message);
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
+  requireTLS: true,
+  family: 4,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+const emailWorker = new Worker(
+  "email-queue",
+  async (job) => {
+    try {
+      const { to, subject, text, html } = job.data;
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to,
+        subject,
+        text,
+        html,
+      };
+      await transporter.sendMail(mailOptions);
+      console.log(`Email sent to ${to}`);
+    } catch (error) {
+      console.error("Error sending email via BullMQ:", error.message);
+      throw error;
+    }
+  },
+  {
+    connection: redisConnection,
   }
+);
+
+emailWorker.on("failed", (job, err) => {
+  console.error(`Email job ${job.id} failed with error: ${err.message}`);
+});
+
+const sendEmailQueue = async (options) => {
+  await emailQueue.add("send-email", options);
 };
 
-module.exports = { sendLoginNotification };
+const sendLoginNotification = async (email, name) => {
+  await sendEmailQueue({
+    to: email,
+    subject: "Security Alert: New Login to Your Account",
+    text: `Hello ${name},\n\nWe detected a new login to your account. If this was you, you can safely ignore this email.\n\nIf you did not log in, please contact support immediately.\n\nBest,\nThe Sprintboard Team`,
+    html: `<p>Hello ${name},</p><p>We detected a new login to your account. If this was you, you can safely ignore this email.</p><p>If you did not log in, please contact support immediately.</p><p>Best,<br>The Sprintboard Team</p>`,
+  });
+};
+
+const sendPasswordResetEmail = async (email, name, resetLink) => {
+  await sendEmailQueue({
+    to: email,
+    subject: "Password Reset Request",
+    text: `Hello ${name},\n\nPlease click the following link to reset your password: ${resetLink}\n\nIf you did not request this, please ignore this email.\n\nBest,\nThe Sprintboard Team`,
+    html: `<p>Hello ${name},</p><p>Please click the following link to reset your password: <a href="${resetLink}">${resetLink}</a></p><p>If you did not request this, please ignore this email.</p><p>Best,<br>The Sprintboard Team</p>`,
+  });
+};
+
+const sendOTPEmail = async (email, name, otp) => {
+  await sendEmailQueue({
+    to: email,
+    subject: "Your Password Reset OTP",
+    text: `Hello ${name},\n\nYour OTP for password reset is: ${otp}\n\nThis OTP is valid for 15 minutes.\n\nBest,\nThe Sprintboard Team`,
+    html: `<p>Hello ${name},</p><p>Your OTP for password reset is: <strong>${otp}</strong></p><p>This OTP is valid for 15 minutes.</p><p>Best,<br>The Sprintboard Team</p>`,
+  });
+};
+
+module.exports = { 
+  sendLoginNotification, 
+  sendPasswordResetEmail,
+  sendOTPEmail,
+  emailQueue
+};

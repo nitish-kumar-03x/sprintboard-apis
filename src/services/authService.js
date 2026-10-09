@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const { sendLoginNotification } = require("../utils/mailer");
 const { uploadToCloudinary, cloudinary } = require("../config/cloudinary");
 const CustomError = require("../utils/CustomError");
+const { sendOTPEmail } = require("../utils/mailer");
 
 const cleanupUploadedFile = (file) => {
   if (file && file.public_id) {
@@ -106,7 +107,53 @@ const loginUser = async (data) => {
   };
 };
 
-module.exports = {
+
+const forgotPassword = async (email) => {
+  if (!email) throw new CustomError("Email is required", 400);
+  const normalizedEmail = email.toLowerCase();
+  
+  const [rows] = await pool.query("SELECT * FROM Users WHERE email = ?", [normalizedEmail]);
+  const user = rows[0];
+  if (!user) throw new CustomError("User not found", 404);
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6 digit OTP
+  const hashedOtp = await bcrypt.hash(otp, 10);
+  
+  // Create a session token containing the hashed OTP
+  const resetSessionToken = jwt.sign({ id: user.id, otp: hashedOtp }, process.env.JWT_SECRET, { expiresIn: "15m" });
+  
+  await sendOTPEmail(user.email, user.name, otp);
+
+  return { message: "OTP sent to email", resetSessionToken };
+};
+
+const resetPassword = async (resetSessionToken, otp, newPassword) => {
+  if (!resetSessionToken || !otp || !newPassword) {
+    throw new CustomError("resetSessionToken, otp, and newPassword are required", 400);
+  }
+
+  try {
+    const decoded = jwt.verify(resetSessionToken, process.env.JWT_SECRET);
+    
+    // Verify OTP
+    const isOtpMatched = await bcrypt.compare(otp.toString(), decoded.otp);
+    if (!isOtpMatched) {
+      throw new CustomError("Invalid OTP", 400);
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await pool.query("UPDATE Users SET password = ? WHERE id = ?", [hashedPassword, decoded.id]);
+    
+    return { message: "Password updated successfully" };
+  } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      throw new CustomError("OTP session expired. Please request a new one.", 400);
+    }
+    throw new CustomError(error.message || "Invalid or expired token", 400);
+  }
+};
+
+module.exports = { forgotPassword, resetPassword, 
   registerUser,
   loginUser,
   cleanupUploadedFile,

@@ -8,11 +8,7 @@ const {
   getTaskById,
   updateTask,
   deleteTask,
-  assignTask,
-  reassignTask,
-  updateTaskStatus,
   addComment,
-  updateProgress,
 } = require("../controllers/taskController");
 
 /**
@@ -119,57 +115,7 @@ tasksRouter.delete(
   deleteTask
 );
 
-/**
- * @swagger
- * /api/private/tasks/assign:
- *   post:
- *     summary: Assign a task (Manager only)
- *     tags: [Tasks]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Task assigned
- */
-tasksRouter.post(
-  "/assign",
-  authMiddleware,
-  roleMiddleware(["manager"]),
-  assignTask
-);
 
-/**
- * @swagger
- * /api/private/tasks/reassign:
- *   put:
- *     summary: Reassign a task (Manager only)
- *     tags: [Tasks]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Task reassigned
- */
-tasksRouter.put(
-  "/reassign",
-  authMiddleware,
-  roleMiddleware(["manager"]),
-  reassignTask
-);
-
-/**
- * @swagger
- * /api/private/tasks/status:
- *   put:
- *     summary: Update task status
- *     tags: [Tasks]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Status updated
- */
-tasksRouter.put("/status", authMiddleware, updateTaskStatus);
 
 /**
  * @swagger
@@ -185,23 +131,6 @@ tasksRouter.put("/status", authMiddleware, updateTaskStatus);
  */
 tasksRouter.post("/comments", authMiddleware, addComment);
 
-/**
- * @swagger
- * /api/private/tasks/progress:
- *   put:
- *     summary: Update task progress (Employee only)
- *     tags: [Tasks]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Progress updated
- */
-tasksRouter.put(
-  "/progress",
-  authMiddleware,
-  roleMiddleware(["employee"]),
-  updateProgress
-);
+
 
 module.exports = tasksRouter;

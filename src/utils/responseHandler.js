@@ -5,5 +5,5 @@ const sendResponse = (res, statusCode, success, message, data = null) => {
     data,
   });
 };
-
 module.exports = sendResponse;
+// To send a formatted response
