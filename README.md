@@ -1,6 +1,6 @@
 # Sprintboard APIs
 
-A robust, feature-rich backend API for a project and task management tool (Sprintboard). Built with Node.js, Express, and MySQL, this API supports Role-Based Access Control (RBAC), background job processing via BullMQ, and stateless authentication via JWT.
+A robust, feature-rich backend API for a project and task management tool (Sprintboard). Built with Node.js, Express, and MySQL, this API supports Role-Based Access Control (RBAC), background job processing via BullMQ, stateless JWT authentication, and automated AI task description improvements via Gemini.
 
 ## Tech Stack
 
@@ -92,3 +92,5 @@ The API is fully documented using Swagger. Once the server is running, you can e
 #### Dashboard
 - **GET** `/api/private/dashboard` - Get dashboard statistics (leveraging Redis caching)
 
+#### AI
+- **POST** `/api/private/ai/improve-description` - Uses Gemini AI to improve task/project descriptions
