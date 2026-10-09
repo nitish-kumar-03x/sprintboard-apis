@@ -2,7 +2,12 @@ const express = require("express");
 const userRouter = express.Router();
 const authMiddleware = require("../middlewares/authMiddleware");
 const multerUploader = require("../middlewares/uploadMiddleware");
-const { getUser, updateUser, getAllUsers, updateTheme } = require("../controllers/userController");
+const {
+  getUser,
+  updateUser,
+  getAllUsers,
+  updateTheme,
+} = require("../controllers/userController");
 
 /**
  * @swagger
@@ -66,7 +71,6 @@ userRouter.get("/all-users", authMiddleware, getAllUsers);
  */
 userRouter.put("/theme", authMiddleware, updateTheme);
 
-
 /**
  * @swagger
  * /api/private/users/me:
@@ -90,6 +94,11 @@ userRouter.put("/theme", authMiddleware, updateTheme);
  *       200:
  *         description: User updated successfully
  */
-userRouter.put("/me", authMiddleware, multerUploader.single("avatar"), updateUser);
+userRouter.put(
+  "/me",
+  authMiddleware,
+  multerUploader.single("avatar"),
+  updateUser,
+);
 
 module.exports = userRouter;

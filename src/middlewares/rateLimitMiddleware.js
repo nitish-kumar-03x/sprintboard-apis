@@ -5,7 +5,8 @@ const loginLimiter = rateLimit({
   max: 5, // Limit each IP to 5 requests per windowMs
   message: {
     success: false,
-    message: "Too many login attempts from this IP, please try again after 15 minutes",
+    message:
+      "Too many login attempts from this IP, please try again after 15 minutes",
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -16,7 +17,8 @@ const registerLimiter = rateLimit({
   max: 5, // Limit each IP to 5 create account requests per windowMs
   message: {
     success: false,
-    message: "Too many accounts created from this IP, please try again after an hour",
+    message:
+      "Too many accounts created from this IP, please try again after an hour",
   },
   standardHeaders: true,
   legacyHeaders: false,

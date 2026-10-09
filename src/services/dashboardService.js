@@ -13,20 +13,24 @@ const mapTaskResult = (row) => {
     dueDate: row.dueDate,
     startDate: row.startDate,
     completedAt: row.completedAt,
-    tags: typeof row.tags === 'string' ? JSON.parse(row.tags) : row.tags,
+    tags: typeof row.tags === "string" ? JSON.parse(row.tags) : row.tags,
     isDeleted: row.isDeleted,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
-    createdBy: row.creatorId ? {
-      _id: row.creatorId,
-      name: row.creatorName,
-      email: row.creatorEmail
-    } : null,
-    assignedTo: row.assigneeId ? {
-      _id: row.assigneeId,
-      name: row.assigneeName,
-      email: row.assigneeEmail
-    } : null
+    createdBy: row.creatorId
+      ? {
+          _id: row.creatorId,
+          name: row.creatorName,
+          email: row.creatorEmail,
+        }
+      : null,
+    assignedTo: row.assigneeId
+      ? {
+          _id: row.assigneeId,
+          name: row.assigneeName,
+          email: row.assigneeEmail,
+        }
+      : null,
   };
 };
 
@@ -44,20 +48,26 @@ const getDashboardStats = async (userId) => {
     WHERE isDeleted = FALSE
   `);
 
-  const [userStatsRows] = await pool.query(`
+  const [userStatsRows] = await pool.query(
+    `
     SELECT 
       COUNT(*) as userTasks,
       COUNT(CASE WHEN status = 'COMPLETED' THEN 1 END) as userCompletedTasks,
       COUNT(CASE WHEN status = 'IN_PROGRESS' THEN 1 END) as userInProgressTasks
     FROM Tasks
     WHERE assignedTo = ? AND isDeleted = FALSE
-  `, [userId]);
+  `,
+    [userId],
+  );
 
-  const [createdStatsRows] = await pool.query(`
+  const [createdStatsRows] = await pool.query(
+    `
     SELECT COUNT(*) as tasksCreatedByUser 
     FROM Tasks 
     WHERE createdBy = ? AND isDeleted = FALSE
-  `, [userId]);
+  `,
+    [userId],
+  );
 
   const [recentTasksRaw] = await pool.query(`
     SELECT t.*, 

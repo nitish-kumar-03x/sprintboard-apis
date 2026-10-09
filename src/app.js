@@ -17,12 +17,13 @@ const userRouter = require("./routes/user");
 const tasksRouter = require("./routes/task");
 const dashboardRouter = require("./routes/dashboard");
 const projectRouter = require("./routes/project");
+const aiRouter = require("./routes/ai");
 
 app.use("/api/public/auth", authRouter);
 app.use("/api/private/users", userRouter);
 app.use("/api/private/tasks", tasksRouter);
 app.use("/api/private/dashboard", dashboardRouter);
 app.use("/api/private/projects", projectRouter);
-
+app.use("/api/private/ai", aiRouter);
 
 module.exports = app;

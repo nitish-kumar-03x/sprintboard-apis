@@ -1,8 +1,16 @@
 const express = require("express");
 const authRouter = express.Router();
 const multerUploader = require("../middlewares/uploadMiddleware");
-const { register, login, forgotPassword, resetPassword } = require("../controllers/authController");
-const { loginLimiter, registerLimiter } = require("../middlewares/rateLimitMiddleware");
+const {
+  register,
+  login,
+  forgotPassword,
+  resetPassword,
+} = require("../controllers/authController");
+const {
+  loginLimiter,
+  registerLimiter,
+} = require("../middlewares/rateLimitMiddleware");
 
 /**
  * @swagger
@@ -39,7 +47,12 @@ const { loginLimiter, registerLimiter } = require("../middlewares/rateLimitMiddl
  *       400:
  *         description: Bad request
  */
-authRouter.post("/register", registerLimiter, multerUploader.single("avatar"), register);
+authRouter.post(
+  "/register",
+  registerLimiter,
+  multerUploader.single("avatar"),
+  register,
+);
 
 /**
  * @swagger
@@ -68,7 +81,6 @@ authRouter.post("/register", registerLimiter, multerUploader.single("avatar"), r
  *         description: Invalid credentials
  */
 authRouter.post("/login", loginLimiter, login);
-
 
 /**
  * @swagger

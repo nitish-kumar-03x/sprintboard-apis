@@ -10,9 +10,9 @@ const getUser = async (req, res) => {
       200,
       true,
       "User fetched successfully",
-      userDetails
+      userDetails,
     );
-    } catch (error) {
+  } catch (error) {
     return errorHandler(error, res);
   }
 };
@@ -21,7 +21,7 @@ const getAllUsers = async (req, res) => {
   try {
     const users = await userService.getAllUsers();
     return sendResponse(res, 200, true, "Users fetched successfully", users);
-    } catch (error) {
+  } catch (error) {
     return errorHandler(error, res);
   }
 };
@@ -31,19 +31,28 @@ const updateTheme = async (req, res) => {
     const { theme } = req.body;
     const result = await userService.updateTheme(req.user.id, theme);
     return sendResponse(res, 200, true, "Theme updated successfully", result);
-    } catch (error) {
+  } catch (error) {
     return errorHandler(error, res);
   }
 };
-
 
 const updateUser = async (req, res) => {
   try {
-    const updatedUser = await userService.updateUser(req.user.id, req.body, req.file);
-    return sendResponse(res, 200, true, "User updated successfully", updatedUser);
-    } catch (error) {
+    const updatedUser = await userService.updateUser(
+      req.user.id,
+      req.body,
+      req.file,
+    );
+    return sendResponse(
+      res,
+      200,
+      true,
+      "User updated successfully",
+      updatedUser,
+    );
+  } catch (error) {
     return errorHandler(error, res);
   }
 };
 
-module.exports = { updateUser,  getUser, getAllUsers, updateTheme };
+module.exports = { updateUser, getUser, getAllUsers, updateTheme };

@@ -7,7 +7,7 @@ const {
   getProjects,
   getProjectById,
   updateProject,
-  deleteProject
+  deleteProject,
 } = require("../controllers/projectController");
 
 /**
@@ -35,7 +35,12 @@ const {
  *       201:
  *         description: Project created
  */
-projectRouter.post("/add", authMiddleware, roleMiddleware(["manager"]), createProject);
+projectRouter.post(
+  "/add",
+  authMiddleware,
+  roleMiddleware(["manager"]),
+  createProject,
+);
 
 /**
  * @swagger
@@ -100,7 +105,12 @@ projectRouter.get("/:id", authMiddleware, getProjectById);
  *       200:
  *         description: Project updated
  */
-projectRouter.put("/:id", authMiddleware, roleMiddleware(["manager"]), updateProject);
+projectRouter.put(
+  "/:id",
+  authMiddleware,
+  roleMiddleware(["manager"]),
+  updateProject,
+);
 
 /**
  * @swagger
@@ -120,6 +130,11 @@ projectRouter.put("/:id", authMiddleware, roleMiddleware(["manager"]), updatePro
  *       200:
  *         description: Project deleted
  */
-projectRouter.delete("/:id", authMiddleware, roleMiddleware(["manager"]), deleteProject);
+projectRouter.delete(
+  "/:id",
+  authMiddleware,
+  roleMiddleware(["manager"]),
+  deleteProject,
+);
 
 module.exports = projectRouter;

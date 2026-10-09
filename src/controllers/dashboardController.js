@@ -18,7 +18,7 @@ const getDashboard = async (req, res) => {
             200,
             true,
             "Dashboard data retrieved successfully",
-            JSON.parse(cachedData)
+            JSON.parse(cachedData),
           );
         }
       }
@@ -43,9 +43,9 @@ const getDashboard = async (req, res) => {
       200,
       true,
       "Dashboard data retrieved successfully",
-      data
+      data,
     );
-    } catch (error) {
+  } catch (error) {
     return errorHandler(error, res);
   }
 };

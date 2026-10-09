@@ -87,7 +87,7 @@ tasksRouter.put(
   "/update/:id",
   authMiddleware,
   roleMiddleware(["manager"]),
-  updateTask
+  updateTask,
 );
 
 /**
@@ -112,10 +112,8 @@ tasksRouter.delete(
   "/:id",
   authMiddleware,
   roleMiddleware(["manager"]),
-  deleteTask
+  deleteTask,
 );
-
-
 
 /**
  * @swagger
@@ -130,7 +128,5 @@ tasksRouter.delete(
  *         description: Comment added
  */
 tasksRouter.post("/comments", authMiddleware, addComment);
-
-
 
 module.exports = tasksRouter;

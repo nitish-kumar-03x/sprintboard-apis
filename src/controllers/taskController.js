@@ -6,7 +6,7 @@ const createTask = async (req, res) => {
   try {
     const task = await taskService.createTask(req.body, req.user.id);
     return sendResponse(res, 201, true, "Task created successfully", task);
-    } catch (error) {
+  } catch (error) {
     return errorHandler(error, res);
   }
 };
@@ -15,7 +15,7 @@ const getTasks = async (req, res) => {
   try {
     const data = await taskService.getTasks(req.body);
     return sendResponse(res, 200, true, "Tasks retrieved successfully", data);
-    } catch (error) {
+  } catch (error) {
     return errorHandler(error, res);
   }
 };
@@ -24,7 +24,7 @@ const getTaskById = async (req, res) => {
   try {
     const task = await taskService.getTaskById(req.params.id);
     return sendResponse(res, 200, true, "Task retrieved successfully", task);
-    } catch (error) {
+  } catch (error) {
     return errorHandler(error, res);
   }
 };
@@ -33,7 +33,7 @@ const updateTask = async (req, res) => {
   try {
     const task = await taskService.updateTask(req.params.id, req.body);
     return sendResponse(res, 200, true, "Task updated successfully", task);
-    } catch (error) {
+  } catch (error) {
     return errorHandler(error, res);
   }
 };
@@ -42,7 +42,7 @@ const deleteTask = async (req, res) => {
   try {
     await taskService.deleteTask(req.params.id);
     return sendResponse(res, 200, true, "Task deleted successfully");
-    } catch (error) {
+  } catch (error) {
     return errorHandler(error, res);
   }
 };
@@ -52,10 +52,10 @@ const addComment = async (req, res) => {
     const task = await taskService.addComment(
       req.body.id,
       req.body.message,
-      req.user.id
+      req.user.id,
     );
     return sendResponse(res, 201, true, "Comment added successfully", task);
-    } catch (error) {
+  } catch (error) {
     return errorHandler(error, res);
   }
 };
@@ -67,4 +67,4 @@ module.exports = {
   updateTask,
   deleteTask,
   addComment,
-  };
+};

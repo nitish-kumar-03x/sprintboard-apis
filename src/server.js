@@ -12,7 +12,6 @@ const PORT = process.env.PORT || 8000;
 
 const startServer = async () => {
   try {
-
     const connection = await pool.getConnection();
     console.log("Database connected successfully");
     connection.release();

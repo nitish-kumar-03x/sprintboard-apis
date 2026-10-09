@@ -79,8 +79,8 @@ const sendOTPEmail = async (email, name, otp) => {
   });
 };
 
-module.exports = { 
-  sendLoginNotification, 
+module.exports = {
+  sendLoginNotification,
   sendPasswordResetEmail,
   sendOTPEmail,
   emailQueue
