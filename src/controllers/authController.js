@@ -32,7 +32,7 @@ const forgotPassword = async (req, res) => {
 const resetPassword = async (req, res) => {
   try {
     const result = await authService.resetPassword(
-      req.body.resetSessionToken,
+      req.body.email,
       req.body.otp,
       req.body.newPassword,
     );

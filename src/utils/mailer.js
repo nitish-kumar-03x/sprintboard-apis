@@ -2,7 +2,7 @@ const nodemailer = require("nodemailer");
 const { Queue, Worker } = require("bullmq");
 
 const IORedis = require("ioredis");
-const redisConnection = new IORedis(process.env.REDIS_URL || "redis://127.0.0.1:6379", { maxRetriesPerRequest: null });
+const redisConnection = new IORedis(process.env.REDIS_URL, { maxRetriesPerRequest: null });
 
 const emailQueue = new Queue("email-queue", {
   connection: redisConnection,
@@ -61,14 +61,6 @@ const sendLoginNotification = async (email, name) => {
   });
 };
 
-const sendPasswordResetEmail = async (email, name, resetLink) => {
-  await sendEmailQueue({
-    to: email,
-    subject: "Password Reset Request",
-    text: `Hello ${name},\n\nPlease click the following link to reset your password: ${resetLink}\n\nIf you did not request this, please ignore this email.\n\nBest,\nThe Sprintboard Team`,
-    html: `<p>Hello ${name},</p><p>Please click the following link to reset your password: <a href="${resetLink}">${resetLink}</a></p><p>If you did not request this, please ignore this email.</p><p>Best,<br>The Sprintboard Team</p>`,
-  });
-};
 
 const sendOTPEmail = async (email, name, otp) => {
   await sendEmailQueue({
@@ -81,7 +73,6 @@ const sendOTPEmail = async (email, name, otp) => {
 
 module.exports = {
   sendLoginNotification,
-  sendPasswordResetEmail,
   sendOTPEmail,
   emailQueue
 };

@@ -1,6 +1,7 @@
 const pool = require("../config/database");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const redisClient = require("../config/redis");
 const { sendLoginNotification } = require("../utils/mailer");
 const { uploadToCloudinary, cloudinary } = require("../config/cloudinary");
 const CustomError = require("../utils/CustomError");
@@ -120,51 +121,50 @@ const forgotPassword = async (email) => {
   const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6 digit OTP
   const hashedOtp = await bcrypt.hash(otp, 10);
 
-  // Create a session token containing the hashed OTP
-  const resetSessionToken = jwt.sign(
-    { id: user.id, otp: hashedOtp },
-    process.env.JWT_SECRET,
-    { expiresIn: "15m" },
-  );
+  // Store hashed OTP in Redis, expiring in 15 mins (900 seconds)
+  await redisClient.setEx(`otp:${normalizedEmail}`, 900, hashedOtp);
 
   await sendOTPEmail(user.email, user.name, otp);
 
-  return { message: "OTP sent to email", resetSessionToken };
+  return { message: "OTP sent to email" };
 };
 
-const resetPassword = async (resetSessionToken, otp, newPassword) => {
-  if (!resetSessionToken || !otp || !newPassword) {
+const resetPassword = async (email, otp, newPassword) => {
+  if (!email || !otp || !newPassword) {
     throw new CustomError(
-      "resetSessionToken, otp, and newPassword are required",
+      "email, otp, and newPassword are required",
       400,
     );
   }
 
-  try {
-    const decoded = jwt.verify(resetSessionToken, process.env.JWT_SECRET);
+  const normalizedEmail = email.toLowerCase();
+  const [rows] = await pool.query("SELECT * FROM Users WHERE email = ?", [
+    normalizedEmail,
+  ]);
+  const user = rows[0];
+  if (!user) throw new CustomError("User not found", 404);
 
-    // Verify OTP
-    const isOtpMatched = await bcrypt.compare(otp.toString(), decoded.otp);
-    if (!isOtpMatched) {
-      throw new CustomError("Invalid OTP", 400);
-    }
-
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await pool.query("UPDATE Users SET password = ? WHERE id = ?", [
-      hashedPassword,
-      decoded.id,
-    ]);
-
-    return { message: "Password updated successfully" };
-  } catch (error) {
-    if (error.name === "TokenExpiredError") {
-      throw new CustomError(
-        "OTP session expired. Please request a new one.",
-        400,
-      );
-    }
-    throw new CustomError(error.message || "Invalid or expired token", 400);
+  const storedHashedOtp = await redisClient.get(`otp:${normalizedEmail}`);
+  if (!storedHashedOtp) {
+    throw new CustomError("OTP session expired or not found. Please request a new one.", 400);
   }
+
+  // Verify OTP
+  const isOtpMatched = await bcrypt.compare(otp.toString(), storedHashedOtp);
+  if (!isOtpMatched) {
+    throw new CustomError("Invalid OTP", 400);
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  await pool.query("UPDATE Users SET password = ? WHERE id = ?", [
+    hashedPassword,
+    user.id,
+  ]);
+
+  // Remove the OTP from Redis once used
+  await redisClient.del(`otp:${normalizedEmail}`);
+
+  return { message: "Password updated successfully" };
 };
 
 module.exports = {
