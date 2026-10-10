@@ -1,6 +1,6 @@
 # Sprintboard APIs
 
-A robust, feature-rich backend API for a project and task management tool (Sprintboard). Built with Node.js, Express, and MySQL, this API supports Role-Based Access Control (RBAC), background job processing via BullMQ, stateless JWT authentication, and automated AI task description improvements via Gemini.
+A robust, feature-rich backend API for a project and task management tool (Sprintboard). Built with Node.js, Express, and MySQL, this API supports Role-Based Access Control (RBAC), background job processing via BullMQ, stateless JWT authentication, and automated AI features like task description improvements and speech-to-text transcription via Gemini.
 
 ## Tech Stack
 
@@ -16,7 +16,7 @@ A robust, feature-rich backend API for a project and task management tool (Sprin
 - **Role-Based Access Control:** Separate roles for `manager` and `employee`.
 - **Advanced Task Management:** Create, update, assign, and track the progress of tasks and projects.
 - **Background Processing:** Non-blocking email notifications sent via BullMQ workers.
-- **Secure Authentication:** JWT-based stateless authentication and a secure, stateless OTP flow for password resets.
+- **Secure Authentication:** JWT-based stateless authentication and a secure, Redis-backed OTP flow for password resets.
 - **Profile Management:** Users can customize their themes dark/light and upload avatars directly to Cloudinary.
 
 ## Prerequisites
@@ -66,7 +66,7 @@ The API is fully documented using Swagger. Once the server is running, you can e
 - **POST** `/api/public/auth/register` - Register a new user (supports avatar upload)
 - **POST** `/api/public/auth/login` - Login and receive a JWT
 - **POST** `/api/public/auth/forgot-password` - Request a 6-digit OTP to your email
-- **POST** `/api/public/auth/reset-password` - Reset your password using the OTP and session token
+- **POST** `/api/public/auth/reset-password` - Reset your password using your email, OTP, and new password
 
 #### Users
 - **GET** `/api/private/users/me` - Get the current logged-in user's profile
@@ -94,3 +94,4 @@ The API is fully documented using Swagger. Once the server is running, you can e
 
 #### AI
 - **POST** `/api/private/ai/improve-description` - Uses Gemini AI to improve task/project descriptions
+- **POST** `/api/private/ai/speech-to-text` - Converts spoken audio into text using Gemini AI
