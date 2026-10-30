@@ -78,7 +78,7 @@ const updateProject = async (id, data) => {
     throw new CustomError("Project ID is required", 400);
   }
 
-  await getProjectById(id); // Check if exists
+  await getProjectById(id);
 
   const updates = [];
   const params = [];
@@ -109,14 +109,25 @@ const deleteProject = async (id) => {
   }
 
   await getProjectById(id);
+  const connection = await pool.getConnection();
 
-  // Delete tasks associated with this project
-  await pool.query(
-    "DELETE FROM TaskComments WHERE taskId IN (SELECT id FROM Tasks WHERE projectId = ?)",
-    [id],
-  );
-  await pool.query("DELETE FROM Tasks WHERE projectId = ?", [id]);
-  await pool.query("DELETE FROM Projects WHERE id = ?", [id]);
+  try {
+    await connection.beginTransaction();
+
+    await connection.query(
+      "DELETE FROM TaskComments WHERE taskId IN (SELECT id FROM Tasks WHERE projectId = ?)",
+      [id],
+    );
+    await connection.query("DELETE FROM Tasks WHERE projectId = ?", [id]);
+    await connection.query("DELETE FROM Projects WHERE id = ?", [id]);
+
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 };
 
 module.exports = {

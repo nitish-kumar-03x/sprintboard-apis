@@ -1,7 +1,10 @@
 const express = require("express");
 const authMiddleware = require("../middlewares/authMiddleware");
 const aiRouter = express.Router();
-const { generateImprovedDescription, convertSpeechToText } = require("../controllers/aiController");
+const {
+  generateImprovedDescription,
+  convertSpeechToText,
+} = require("../controllers/aiController");
 const uploadMiddleware = require("../middlewares/uploadMiddleware");
 
 /**

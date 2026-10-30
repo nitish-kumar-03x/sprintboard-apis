@@ -38,7 +38,8 @@ const convertSpeechToText = async (file) => {
     },
   };
 
-  const prompt = "Transcribe the speech in this audio exactly to text. Do not add any extra formatting or conversational text.";
+  const prompt =
+    "Transcribe the speech in this audio exactly to text. Do not add any extra formatting or conversational text.";
 
   try {
     const result = await model.generateContent([prompt, audioPart]);

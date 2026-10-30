@@ -131,10 +131,7 @@ const forgotPassword = async (email) => {
 
 const resetPassword = async (email, otp, newPassword) => {
   if (!email || !otp || !newPassword) {
-    throw new CustomError(
-      "email, otp, and newPassword are required",
-      400,
-    );
+    throw new CustomError("email, otp, and newPassword are required", 400);
   }
 
   const normalizedEmail = email.toLowerCase();
@@ -146,7 +143,10 @@ const resetPassword = async (email, otp, newPassword) => {
 
   const storedHashedOtp = await redisClient.get(`otp:${normalizedEmail}`);
   if (!storedHashedOtp) {
-    throw new CustomError("OTP session expired or not found. Please request a new one.", 400);
+    throw new CustomError(
+      "OTP session expired or not found. Please request a new one.",
+      400,
+    );
   }
 
   // Verify OTP

@@ -29,18 +29,62 @@ tasksRouter.post("/", authMiddleware, roleMiddleware(["manager"]), createTask);
 
 /**
  * @swagger
- * /api/private/tasks/all:
- *   post:
- *     summary: Get all tasks
+ * /api/private/tasks:
+ *   get:
+ *     summary: Get all tasks (paginated and filterable)
  *     tags: [Tasks]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [TODO, IN_PROGRESS, COMPLETED, BLOCKED, CANCELLED]
+ *       - in: query
+ *         name: priority
+ *         schema:
+ *           type: string
+ *           enum: [LOW, MEDIUM, HIGH, URGENT]
+ *       - in: query
+ *         name: assignedTo
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: createdBy
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: projectId
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: progressMin
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: progressMax
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
  *     responses:
  *       200:
  *         description: List of tasks
  *       401:
  *         description: Unauthorized
  */
+tasksRouter.get("/", authMiddleware, getTasks);
+
+// Maintained for backward compatibility
 tasksRouter.post("/all", authMiddleware, getTasks);
 
 /**

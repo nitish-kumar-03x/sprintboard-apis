@@ -13,7 +13,8 @@ const createTask = async (req, res) => {
 
 const getTasks = async (req, res) => {
   try {
-    const data = await taskService.getTasks(req.body);
+    const filters = { ...req.query, ...req.body };
+    const data = await taskService.getTasks(filters);
     return sendResponse(res, 200, true, "Tasks retrieved successfully", data);
   } catch (error) {
     return errorHandler(error, res);

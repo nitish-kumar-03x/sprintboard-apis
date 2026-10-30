@@ -3,7 +3,10 @@ const aiService = require("../services/aiService");
 const generateImprovedDescription = async (req, res) => {
   try {
     const { title, description } = req.body;
-    const improvedDescription = await aiService.generateImprovedDescription(title, description);
+    const improvedDescription = await aiService.generateImprovedDescription(
+      title,
+      description,
+    );
 
     return res.status(200).json({
       success: true,

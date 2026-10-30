@@ -76,7 +76,7 @@ The API is fully documented using Swagger. Once the server is running, you can e
 
 #### Tasks
 - **POST** `/api/private/tasks` - Create a new task *(Manager only)*
-- **POST** `/api/private/tasks/all` - Get a paginated and filterable list of tasks
+- **GET** `/api/private/tasks` - Get a paginated and filterable list of tasks (query params: `page`, `limit`, `status`, `priority`, `assignedTo`, `projectId`, etc.)
 - **GET** `/api/private/tasks/:id` - Get details of a specific task
 - **PUT** `/api/private/tasks/update/:id` - Master route to update task details, priority, assignee, status, and progress
 - **DELETE** `/api/private/tasks/:id` - Delete a task *(Manager only)*

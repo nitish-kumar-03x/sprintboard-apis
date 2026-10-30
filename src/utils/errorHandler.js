@@ -5,7 +5,6 @@ const errorHandler = (error, res) => {
     success: false,
     message,
     statusCode,
-    data: error.stack,
   });
 };
 module.exports = errorHandler;

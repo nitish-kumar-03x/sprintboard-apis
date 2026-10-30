@@ -2,10 +2,8 @@ const nodemailer = require("nodemailer");
 const { Queue, Worker } = require("bullmq");
 
 const IORedis = require("ioredis");
-const redisConnection = new IORedis(process.env.REDIS_URL, { maxRetriesPerRequest: null });
-
-const emailQueue = new Queue("email-queue", {
-  connection: redisConnection,
+const redisConnection = new IORedis(process.env.REDIS_URL, {
+  maxRetriesPerRequest: null,
 });
 
 const transporter = nodemailer.createTransport({
@@ -18,6 +16,10 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+});
+
+const emailQueue = new Queue("email-queue", {
+  connection: redisConnection,
 });
 
 const emailWorker = new Worker(
@@ -41,7 +43,7 @@ const emailWorker = new Worker(
   },
   {
     connection: redisConnection,
-  }
+  },
 );
 
 emailWorker.on("failed", (job, err) => {
@@ -49,7 +51,15 @@ emailWorker.on("failed", (job, err) => {
 });
 
 const sendEmailQueue = async (options) => {
-  await emailQueue.add("send-email", options);
+  await emailQueue.add("send-email", options, {
+    attempts: 3,
+    backoff: {
+      type: "exponential",
+      delay: 3000,
+    },
+    removeOnComplete: true,
+    removeOnFail: false,
+  });
 };
 
 const sendLoginNotification = async (email, name) => {
@@ -60,7 +70,6 @@ const sendLoginNotification = async (email, name) => {
     html: `<p>Hello ${name},</p><p>We detected a new login to your account. If this was you, you can safely ignore this email.</p><p>If you did not log in, please contact support immediately.</p><p>Best,<br>The Sprintboard Team</p>`,
   });
 };
-
 
 const sendOTPEmail = async (email, name, otp) => {
   await sendEmailQueue({
@@ -74,5 +83,5 @@ const sendOTPEmail = async (email, name, otp) => {
 module.exports = {
   sendLoginNotification,
   sendOTPEmail,
-  emailQueue
+  emailQueue,
 };
